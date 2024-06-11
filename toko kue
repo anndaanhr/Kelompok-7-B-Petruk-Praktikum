@@ -279,10 +279,10 @@ void displayOrderHistory(const vector<Order>& orders) {
 
 int main() {
     vector<Cake> cakeCatalog = {
-        Cake("Cupcake", "Kue dengan perpaduan sempurna antara kelembutan dan kelezatan dalam satu gigitan.", 15000),
-        Cake("Macaron", "Kue dengan perpaduan luar yang sedikit renyah dengan bagian dalam yang lembut dan chewy.", 8000),
-        Cake("Kue sus", "Kue dengan perpaduan antara tekstur yang renyah dan isian yang lembut.", 2500),
-        Cake("Cheese cake", "Kue dengan perpaduan kerak yang renyah dan krim keju yang lembut.", 3500)
+        Cake("Cupcake", "Kue dengan kelembutan dan kelezatan dalam satu gigitan.", 5000),
+        Cake("Macaron", "Kue dengan luar yang renyah dengan bagian dalam yang chewy.", 15000),
+        Cake("Kue sus", "Kue dengan tekstur yang renyah dan isian yang lembut.", 2500),
+        Cake("Cheese cake", "Kue dengan kerak yang renyah dan krim keju yang lembut.", 125000)
     };
 
     vector<User> users;
