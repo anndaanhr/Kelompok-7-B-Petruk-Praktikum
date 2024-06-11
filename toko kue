@@ -225,10 +225,10 @@ void displayReceipt(const vector<Order>& orders) {
 
 int main() {
     vector<Cake> cakeCatalog = {
-        {"Red Velvet", "Lembut dan manis", 50000},
-        {"Choco Lava", "Coklat leleh di dalam", 75000},
-        {"Kue sus", "enak banget", 5000},
-        {"Risol mayo", "Risol enak dengan mayo", 3500}
+        {"Cupcake", "kue dengan perpaduan sempurna antara kelembutan dan kelezatan dalam satu gigitan", 15000},
+        {"Macaron", "kue dengan perpaduan luar yang sedikit renyah dengan bagian dalam yang lembut dan chewy", 20000},
+        {"Kue sus", "kue dengan perpaduan antara tekstur yang renyah dan isian yang lembut", 5000},
+        {"Cheese cake", "kue dengan perpaduan kerak yang renyah dan krim keju yang lembut", 150000}
     };
 
     vector<User> users;
