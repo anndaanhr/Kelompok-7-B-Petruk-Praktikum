@@ -3,32 +3,57 @@
 #include <string>
 #include <vector>
 #include <iomanip>
-#include <thread>
-#include <chrono>
 #include <cstdlib>
 #include <unistd.h>
+#include <thread> 
+#include <chrono> 
 
 using namespace std;
 
-struct Cake {
+class Cake {
+private:
     string name;
     string description;
     double price;
+
+public:
+    Cake(string n, string desc, double p) : name(n), description(desc), price(p) {}
+
+    string getName() const { return name; }
+    string getDescription() const { return description; }
+    double getPrice() const { return price; }
 };
 
-struct User {
+class User {
+private:
     string username;
     string password;
+
+public:
+    User(string u, string p) : username(u), password(p) {}
+
+    string getUsername() const { return username; }
+    string getPassword() const { return password; }
 };
 
-struct Order {
+class Order {
+private:
     string cakeName;
     string flavor;
     string size;
     double totalPrice;
+
+public:
+    Order(string cName, string flav, string sz, double price) : cakeName(cName), flavor(flav), size(sz), totalPrice(price) {}
+
+    string getCakeName() const { return cakeName; }
+    string getFlavor() const { return flavor; }
+    string getSize() const { return size; }
+    double getTotalPrice() const { return totalPrice; }
 };
 
 void displayReceipt(const vector<Order>& orders);
+void displayOrderHistory(const vector<Order>& orders);
 void clearScreen() {
     #if defined(_WIN32) || defined(_WIN64)
         system("cls");
@@ -41,42 +66,41 @@ void displayMainMenu() {
     cout << "===== Hammer Bakery =====" << endl;
     cout << "1. Lihat Katalog" << endl;
     cout << "2. Pesan Kue" << endl;
-    cout << "3. Keluar" << endl;
+    cout << "3. Riwayat Pesanan" << endl;
+    cout << "4. Keluar" << endl;
     cout << "Pilih opsi: ";
 }
 
 void displayCakeMenu(const vector<Cake>& catalog) {
     clearScreen();
-    while (true) {
-        cout << "===== Katalog Kue =====" << endl;
-        cout << "No.  Nama Kue              Deskripsi                          Harga" << endl;
-        cout << "---------------------------------------------------------------------" << endl;
-        for (size_t i = 0; i < catalog.size(); ++i) {
-            cout << setw(2) << right << i + 1 << ".  ";
-            cout << setw(20) << left << catalog[i].name;
-            cout << setw(35) << left << catalog[i].description;
-            cout << " Rp" << fixed << setprecision(0) << catalog[i].price << endl;
-        }
-        cout << setw(2) << right << 5 << ".  Kembali ke Menu Utama" << endl;
-        
-        int choice;
-        cout << "Pilih opsi: ";
-        cin >> choice;
-        
-        if (choice == 5) {
-            clearScreen();
-            break;
-        } else {
-            clearScreen();
-            cout << "Opsi tidak valid. Silakan coba lagi." << endl;
-        }
+    cout << "===== Katalog Kue =====" << endl;
+    cout << "No.  Nama Kue              Deskripsi                          Harga" << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+    for (size_t i = 0; i < catalog.size(); ++i) {
+        cout << setw(2) << right << i + 1 << ".  ";
+        cout << setw(20) << left << catalog[i].getName();
+        cout << setw(35) << left << catalog[i].getDescription();
+        cout << " Rp" << fixed << setprecision(0) << catalog[i].getPrice() << endl;
+    }
+    cout << "5. Kembali ke Menu Utama" << endl;
+
+    cout << "Tekan '5' untuk kembali ke Menu Utama: ";
+    int choice;
+    cin >> choice;
+    if (choice == 5) {
+        clearScreen();
+        return; 
+    } else {
+        cout << "Pilihan tidak valid. Silakan coba lagi." << endl;
+        displayCakeMenu(catalog); 
     }
 }
+
 
 void saveUsersToFile(const vector<User>& users) {
     ofstream outFile("users.txt");
     for (const auto& user : users) {
-        outFile << user.username << " " << user.password << endl;
+        outFile << user.getUsername() << " " << user.getPassword() << endl;
     }
 }
 
@@ -84,7 +108,7 @@ void loadUsersFromFile(vector<User>& users) {
     ifstream inFile("users.txt");
     string username, password;
     while (inFile >> username >> password) {
-        users.push_back({username, password});
+        users.push_back(User(username, password));
     }
 }
 
@@ -97,7 +121,7 @@ void registerUser(vector<User>& users) {
     cout << "Masukkan kata sandi: ";
     cin >> password;
     
-    users.push_back({username, password});
+    users.push_back(User(username, password));
     saveUsersToFile(users);
 }
 
@@ -110,7 +134,7 @@ bool loginUser(const vector<User>& users, string& loggedInUser) {
     cout << "Masukkan kata sandi: ";
     cin >> password;
     for (const auto& user : users) {
-        if (user.username == username && user.password == password) {
+        if (user.getUsername() == username && user.getPassword() == password) {
             loggedInUser = username;
             return true;
         }
@@ -121,7 +145,7 @@ bool loginUser(const vector<User>& users, string& loggedInUser) {
 void animasiloading(int durationSeconds) {
     const char* loadingChars = "|/-\\";
     int numChars = 4;
-    int sleepDuration = 100;  
+    int sleepDuration = 100;
 
     for (int i = 0; i < durationSeconds * 1000 / sleepDuration; ++i) {
         cout << "\rMembuat Akun... " << loadingChars[i % numChars] << std::flush;
@@ -130,88 +154,93 @@ void animasiloading(int durationSeconds) {
 }
 
 void orderCake(const vector<Cake>& catalog, vector<Order>& orders, const string& loggedInUser) {
-    while (true) {
+    clearScreen();
+    int choice;
+    cout << "===== Pesan Kue =====" << endl;
+    cout << "No.  Nama Kue              Deskripsi                          Harga" << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+    for (size_t i = 0; i < catalog.size(); ++i) {
+        cout << setw(2) << right << i + 1 << ".  ";
+        cout << setw(20) << left << catalog[i].getName();
+        cout << setw(35) << left << catalog[i].getDescription();
+        cout << " Rp" << fixed << setprecision(0) << catalog[i].getPrice() << endl;
+    }
+    cout << "Tekan '5' untuk kembali ke Menu Utama" << endl;
+    cout << "Pilih nomor kue yang ingin dipesan: ";
+    cin >> choice;
+    if (choice == 5) {
         clearScreen();
-        int choice;
-        cout << "Pilih nomor kue yang ingin dipesan: ";
-        cin >> choice;
-        while (cin.fail() || choice < 1 || choice > catalog.size()) {
-            cin.clear();
-            cin.ignore(10000, '\n');
-            cout << "Masukkan nomor kue yang valid: ";
-            cin >> choice;
-        }
+        return;
+    }
 
-        string flavor;
-        vector<string> flavors = {"Cokelat", "Vanila", "Stroberi"};
-        cout << "Pilih rasa: " << endl;
-        for (size_t i = 0; i < flavors.size(); ++i) {
-            cout << i + 1 << ". " << flavors[i] << endl;
-        }
-        int flavorChoice;
-        cout << "Pilihan Anda: ";
-        cin >> flavorChoice;
-        while (cin.fail() || flavorChoice < 1 || flavorChoice > flavors.size()) {
-            cin.clear();
-            cin.ignore(10000, '\n');
-            cout << "Pilihan rasa tidak valid. Silakan pilih kembali: ";
-            cin >> flavorChoice;
-        }
-        flavor = flavors[flavorChoice - 1];
-
+    string flavor;
+    vector<string> flavors = {"Cokelat", "Vanila", "Stroberi"};
+    clearScreen();
+    cout << "===== Pilih Rasa =====" << endl;
+    for (size_t i = 0; i < flavors.size(); ++i) {
+        cout << i + 1 << ". " << flavors[i] << endl;
+    }
+    int flavorChoice;
+    cout << "Pilihan Anda: ";
+    cin >> flavorChoice;
+    if (flavorChoice < 1 || flavorChoice > flavors.size()) {
+        cout << "Pilihan tidak valid. Silakan coba lagi." << endl;
         clearScreen();
+        return;
+    }
+    flavor = flavors[flavorChoice - 1];
 
-        string size;
-        double basePrice = catalog[choice - 1].price;
-        double totalPrice = basePrice;
-        vector<string> sizes = {"Regular", "Large", "Extra Large"};
-        cout << "Pilih ukuran: " << endl;
-        for (size_t i = 0; i < sizes.size(); ++i) {
-            cout << i + 1 << ". " << sizes[i] << endl;
-        }
-        int sizeChoice;
-        cout << "Pilihan Anda: ";
-        cin >> sizeChoice;
-        while (cin.fail() || sizeChoice < 1 || sizeChoice > sizes.size()) {
-            cin.clear();
-            cin.ignore(10000, '\n');
-            cout << "Pilihan ukuran tidak valid. Silakan pilih kembali: ";
-            cin >> sizeChoice;
-        }
-        size = sizes[sizeChoice - 1];
+    clearScreen();
 
-        if (size == "Large") {
-            totalPrice += 5000;
-        } else if (size == "Extra Large") {
-            totalPrice += 10000;
-        }
-
-        orders.push_back({catalog[choice - 1].name, flavor, size, totalPrice});
-        cout << "Pesanan berhasil diterima!" << endl;
-        cout << "Total Harga: Rp" << fixed << setprecision(0) << totalPrice << endl;
-
+    string size;
+    double basePrice = catalog[choice - 1].getPrice();
+    double totalPrice = basePrice;
+    vector<string> sizes = {"Regular", "Large", "Extra Large"};
+    cout << "===== Pilih Ukuran =====" << endl;
+    for (size_t i = 0; i < sizes.size(); ++i) {
+        cout << i + 1 << ". " << sizes[i] << endl;
+    }
+    int sizeChoice;
+    cout << "Pilihan Anda: ";
+    cin >> sizeChoice;
+    if (sizeChoice < 1 || sizeChoice > sizes.size()) {
+        cout << "Pilihan tidak valid. Silakan coba lagi." << endl;
         clearScreen();
+        return;
+    }
+    size = sizes[sizeChoice - 1];
 
-        displayReceipt(orders);
+    if (size == "Large") {
+        totalPrice += 5000;
+    } else if (size == "Extra Large") {
+        totalPrice += 10000;
+    }
 
-        char repeat;
-        cout << "Apakah Anda ingin memesan lagi? (y/n): ";
-        cin >> repeat;
-        if (repeat != 'y' && repeat != 'Y') {
-            clearScreen();
-            break; 
-        }
+    orders.push_back(Order(catalog[choice - 1].getName(), flavor, size, totalPrice));
+    cout << "Pesanan berhasil diterima!" << endl;
+    cout << "Total Harga: Rp" << fixed << setprecision(0) << totalPrice << endl;
+
+    char repeat;
+    cout << "Apakah Anda ingin melanjutkan pesanan? (y/n): ";
+    cin >> repeat;
+
+    if (repeat == 'n' || repeat == 'N') {
+        clearScreen();
+        orderCake(catalog, orders, loggedInUser); 
+    } else if (repeat == 'y' || repeat == 'Y') {
+        displayReceipt(orders); 
     }
 }
 
 void displayReceipt(const vector<Order>& orders) {
+    clearScreen();
     cout << "===== Struk Pembelian =====" << endl;
     for (size_t i = 0; i < orders.size(); ++i) {
         cout << "Pesanan " << i + 1 << ":" << endl;
-        cout << "Nama Kue: " << orders[i].cakeName << endl;
-        cout << "Rasa: " << orders[i].flavor << endl;
-        cout << "Ukuran: " << orders[i].size << endl;
-        cout << "Total Harga: Rp" << fixed << setprecision(0) << orders[i].totalPrice << endl;
+        cout << "Nama Kue: " << orders[i].getCakeName() << endl;
+        cout << "Rasa: " << orders[i].getFlavor() << endl;
+        cout << "Ukuran: " << orders[i].getSize() << endl;
+        cout << "Total Harga: Rp" << fixed << setprecision(0) << orders[i].getTotalPrice() << endl;
         cout << "--------------------------" << endl;
     }
 
@@ -220,15 +249,42 @@ void displayReceipt(const vector<Order>& orders) {
     cin >> repeat;
     if (repeat == 'n' || repeat == 'N') {
         clearScreen();
+        return;
+    } else if (repeat == 'y' || repeat == 'Y') {
+        clearScreen();
+        return;
     }
 }
 
+void displayOrderHistory(const vector<Order>& orders) {
+    clearScreen();
+    cout << "===== Riwayat Pesanan =====" << endl;
+    if (orders.empty()) {
+        cout << "Belum ada riwayat pesanan." << endl;
+    } else {
+        for (size_t i = 0; i < orders.size(); ++i) {
+            cout << "Pesanan " << i + 1 << ":" << endl;
+            cout << "Nama Kue: " << orders[i].getCakeName() << endl;
+            cout << "Rasa: " << orders[i].getFlavor() << endl;
+            cout << "Ukuran: " << orders[i].getSize() << endl;
+            cout << "Total Harga: Rp" << fixed << setprecision(0) << orders[i].getTotalPrice() << endl;
+            cout << "--------------------------" << endl;
+        }
+    }
+    cout << "Tekan 'Enter' untuk kembali ke Menu Utama";
+    cin.get();
+    cin.ignore(); 
+    clearScreen(); 
+}
+
+
+
 int main() {
     vector<Cake> cakeCatalog = {
-        {"Cupcake", "kue dengan perpaduan sempurna antara kelembutan dan kelezatan dalam satu gigitan", 15000},
-        {"Macaron", "kue dengan perpaduan luar yang sedikit renyah dengan bagian dalam yang lembut dan chewy", 20000},
-        {"Kue sus", "kue dengan perpaduan antara tekstur yang renyah dan isian yang lembut", 5000},
-        {"Cheese cake", "kue dengan perpaduan kerak yang renyah dan krim keju yang lembut", 150000}
+        Cake("Red Velvet", "Kue dengan warna merah cerah dan rasa lembut.", 8000),
+        Cake("Choco Lava", "Kue dengan coklat leleh di dalamnya yang menggoda.", 8000),
+        Cake("Kue sus", "Kue dengan adonan ringan dan diisi dengan krim lezat.", 2500),
+        Cake("Risol mayo", "Kue dengan adonan tepung yang diisi dengan campuran mayones dan daging memberikan rasa gurih.", 3500)
     };
 
     vector<User> users;
@@ -240,12 +296,13 @@ int main() {
 
     loadUsersFromFile(users);
     
-    while (true) {
+     while (true) {
         if (!isLoggedIn) {
             cout << "===== Selamat Datang di Hammer Bakery =====" << endl;
             cout << "Silakan pilih opsi:" << endl;
             cout << "1. Registrasi" << endl;
             cout << "2. Login" << endl;
+            cout << "3. Keluar" << endl;
             cout << "Pilih opsi: ";
             int choice;
             cin >> choice;
@@ -290,6 +347,9 @@ int main() {
                     orderCake(cakeCatalog, orders, loggedInUser);
                     break;
                 case 3:
+                    displayOrderHistory(orders);
+                    break;
+                case 4:
                     cout << "Terima kasih telah menggunakan layanan Hammer Bakery." << endl;
                     return 0;
                 default:
