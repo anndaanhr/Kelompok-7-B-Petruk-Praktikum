@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <thread>
+#include <chrono>
+#include <cstdlib>
+#include <unistd.h>
 
 using namespace std;
 
@@ -24,43 +28,66 @@ struct Order {
 };
 
 void displayReceipt(const vector<Order>& orders);
+void clearScreen() {
+    #if defined(_WIN32) || defined(_WIN64)
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
 
 void displayMainMenu() {
     cout << "===== Hammer Bakery =====" << endl;
-    cout << "1. Registrasi" << endl;
-    cout << "2. Login" << endl;
-    cout << "3. Lihat Katalog" << endl;
-    cout << "4. Pesan Kue" << endl;
-    cout << "5. Keluar" << endl;
+    cout << "1. Lihat Katalog" << endl;
+    cout << "2. Pesan Kue" << endl;
+    cout << "3. Keluar" << endl;
     cout << "Pilih opsi: ";
 }
 
 void displayCakeMenu(const vector<Cake>& catalog) {
-    cout << "===== Katalog Kue =====" << endl;
-    cout << "No.  Nama Kue              Deskripsi                          Harga" << endl;
-    cout << "---------------------------------------------------------------------" << endl;
-    for (size_t i = 0; i < catalog.size(); ++i) {
-        cout << setw(2) << right << i + 1 << ".  ";
-        cout << setw(20) << left << catalog[i].name;
-        cout << setw(35) << left << catalog[i].description;
-        cout << " Rp" << fixed << setprecision(0) << catalog[i].price << endl;
+    clearScreen();
+    while (true) {
+        cout << "===== Katalog Kue =====" << endl;
+        cout << "No.  Nama Kue              Deskripsi                          Harga" << endl;
+        cout << "---------------------------------------------------------------------" << endl;
+        for (size_t i = 0; i < catalog.size(); ++i) {
+            cout << setw(2) << right << i + 1 << ".  ";
+            cout << setw(20) << left << catalog[i].name;
+            cout << setw(35) << left << catalog[i].description;
+            cout << " Rp" << fixed << setprecision(0) << catalog[i].price << endl;
+        }
+        cout << "  0. Kembali ke Menu Utama" << endl;
+        
+        int choice;
+        cout << "Pilih opsi: ";
+        cin >> choice;
+        
+        if (choice == 0) {
+            clearScreen();
+            break;
+        } else {
+            clearScreen();
+            cout << "Opsi tidak valid. Silakan coba lagi." << endl;
+        }
     }
-    cout << "99. Kembali ke Menu Utama" << endl;
 }
 
 void registerUser(vector<User>& users) {
     string username, password;
+    cout << "===== SELAMAT DATANG DI TOKO NANDO =====" << endl;
+    cout << "=====      Daftarkan Akun anda     =====" << endl;
     cout << "Masukkan nama pengguna: ";
     cin >> username;
     cout << "Masukkan kata sandi: ";
     cin >> password;
     
     users.push_back({username, password});
-    cout << "Registrasi berhasil!" << endl;
 }
 
 bool loginUser(const vector<User>& users, string& loggedInUser) {
     string username, password;
+    
+    cout << "===== Silahkan login =====" << endl;
     cout << "Masukkan nama pengguna: ";
     cin >> username;
     cout << "Masukkan kata sandi: ";
@@ -74,7 +101,20 @@ bool loginUser(const vector<User>& users, string& loggedInUser) {
     return false;
 }
 
+void animasiloading(int durationSeconds) {
+    const char* loadingChars = "|/-\\";
+    int numChars = 4;
+    int sleepDuration = 100;  
+
+    for (int i = 0; i < durationSeconds * 1000 / sleepDuration; ++i) {
+        cout << "\rMembuat Akun... " << loadingChars[i % numChars] << std::flush;
+        this_thread::sleep_for(chrono::milliseconds(sleepDuration));
+    }
+
+}
+
 void orderCake(const vector<Cake>& catalog, vector<Order>& orders, const string& loggedInUser) {
+    clearScreen();
     int choice;
     cout << "Pilih nomor kue yang ingin dipesan: ";
     cin >> choice;
@@ -156,9 +196,10 @@ void displayReceipt(const vector<Order>& orders) {
 
 int main() {
     vector<Cake> cakeCatalog = {
-        {"Padil Ambatukam", "Barang tua, jangan dibeli", 1000},
-        {"Anhar ganteng", "Limited sale", 1000000},
-        {"Dymaz tobrut", "barang bekas, diskon 99%", 2000}    
+        {"Red Velvet", "Lembut dan manis", 50000},
+        {"Choco Lava", "Coklat leleh di dalam", 75000},
+        {"Kue sus", "enak banget", 5000},
+        {"Risol mayo", "Risol enak dengan mayo", 3500}
     };
 
     vector<User> users;
@@ -166,29 +207,48 @@ int main() {
 
     string loggedInUser;
     bool isLoggedIn = false;
-
+    int durationSeconds = 5;
+    
     while (true) {
         if (!isLoggedIn) {
             cout << "===== Selamat Datang di Hammer Bakery =====" << endl;
             cout << "Silakan pilih opsi:" << endl;
             cout << "1. Registrasi" << endl;
             cout << "2. Login" << endl;
-            cout << "3. Keluar" << endl;
             cout << "Pilih opsi: ";
             int choice;
             cin >> choice;
 
             switch (choice) {
                 case 1:
+                    clearScreen();
                     registerUser(users);
+                    clearScreen();
+                    animasiloading(durationSeconds);
+                    clearScreen();
+                    while (!isLoggedIn) {
+                isLoggedIn = loginUser(users, loggedInUser);
+                if (isLoggedIn) {
+                    cout << "Login berhasil!" << endl;
+                    sleep(1);
+                    clearScreen();
+                } else {
+                    cout << "Password atau username salah. Silakan coba lagi!" << endl;
+                }
+                }
                     break;
                 case 2:
-                    isLoggedIn = loginUser(users, loggedInUser);
-                    if (isLoggedIn) {
-                        cout << "Login berhasil!" << endl;
-                    } else {
-                        cout << "Login gagal. Silakan coba lagi." << endl;
-                    }
+                clearScreen();
+                     while (!isLoggedIn) {
+                isLoggedIn = loginUser(users, loggedInUser);
+                if (isLoggedIn) {
+                    cout << "Login berhasil!" << endl;
+                    sleep(1);
+                    clearScreen();
+                } else {
+                    cout << "Password atau username salah. Silakan coba lagi!" << endl;
+                }
+                }
                     break;
                 case 3:
                     cout << "Terima kasih telah mengunjungi Hammer Bakery." << endl;
@@ -197,11 +257,7 @@ int main() {
                     cout << "Opsi tidak valid. Silakan coba lagi." << endl;
             }
         } else {
-            cout << "===== Menu =====" << endl;
-            cout << "1. Lihat Katalog" << endl;
-            cout << "2. Pesan Kue" << endl;
-            cout << "3. Keluar" << endl;
-            cout << "Pilih opsi: ";
+            displayMainMenu();
             int choice;
             cin >> choice;
 
