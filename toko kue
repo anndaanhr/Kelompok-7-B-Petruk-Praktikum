@@ -277,14 +277,12 @@ void displayOrderHistory(const vector<Order>& orders) {
     clearScreen(); 
 }
 
-
-
 int main() {
     vector<Cake> cakeCatalog = {
-        Cake("Red Velvet", "Kue dengan warna merah cerah dan rasa lembut.", 8000),
-        Cake("Choco Lava", "Kue dengan coklat leleh di dalamnya yang menggoda.", 8000),
-        Cake("Kue sus", "Kue dengan adonan ringan dan diisi dengan krim lezat.", 2500),
-        Cake("Risol mayo", "Kue dengan adonan tepung yang diisi dengan campuran mayones dan daging memberikan rasa gurih.", 3500)
+        Cake("Cupcake", "Kue dengan perpaduan sempurna antara kelembutan dan kelezatan dalam satu gigitan.", 15000),
+        Cake("Macaron", "Kue dengan perpaduan luar yang sedikit renyah dengan bagian dalam yang lembut dan chewy.", 8000),
+        Cake("Kue sus", "Kue dengan perpaduan antara tekstur yang renyah dan isian yang lembut.", 2500),
+        Cake("Cheese cake", "Kue dengan perpaduan kerak yang renyah dan krim keju yang lembut.", 3500)
     };
 
     vector<User> users;
