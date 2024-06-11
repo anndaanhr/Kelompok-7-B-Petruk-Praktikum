@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <iomanip>
@@ -56,19 +57,34 @@ void displayCakeMenu(const vector<Cake>& catalog) {
             cout << setw(35) << left << catalog[i].description;
             cout << " Rp" << fixed << setprecision(0) << catalog[i].price << endl;
         }
-        cout << "  0. Kembali ke Menu Utama" << endl;
+        cout << setw(2) << right << 5 << ".  Kembali ke Menu Utama" << endl;
         
         int choice;
         cout << "Pilih opsi: ";
         cin >> choice;
         
-        if (choice == 0) {
+        if (choice == 5) {
             clearScreen();
             break;
         } else {
             clearScreen();
             cout << "Opsi tidak valid. Silakan coba lagi." << endl;
         }
+    }
+}
+
+void saveUsersToFile(const vector<User>& users) {
+    ofstream outFile("users.txt");
+    for (const auto& user : users) {
+        outFile << user.username << " " << user.password << endl;
+    }
+}
+
+void loadUsersFromFile(vector<User>& users) {
+    ifstream inFile("users.txt");
+    string username, password;
+    while (inFile >> username >> password) {
+        users.push_back({username, password});
     }
 }
 
@@ -82,6 +98,7 @@ void registerUser(vector<User>& users) {
     cin >> password;
     
     users.push_back({username, password});
+    saveUsersToFile(users);
 }
 
 bool loginUser(const vector<User>& users, string& loggedInUser) {
@@ -110,68 +127,81 @@ void animasiloading(int durationSeconds) {
         cout << "\rMembuat Akun... " << loadingChars[i % numChars] << std::flush;
         this_thread::sleep_for(chrono::milliseconds(sleepDuration));
     }
-
 }
 
 void orderCake(const vector<Cake>& catalog, vector<Order>& orders, const string& loggedInUser) {
-    clearScreen();
-    int choice;
-    cout << "Pilih nomor kue yang ingin dipesan: ";
-    cin >> choice;
-    while (cin.fail() || choice < 1 || choice > catalog.size()) {
-        cin.clear();
-        cin.ignore(10000, '\n');
-        cout << "Masukkan nomor kue yang valid: ";
+    while (true) {
+        clearScreen();
+        int choice;
+        cout << "Pilih nomor kue yang ingin dipesan: ";
         cin >> choice;
-    }
+        while (cin.fail() || choice < 1 || choice > catalog.size()) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "Masukkan nomor kue yang valid: ";
+            cin >> choice;
+        }
 
-    string flavor;
-    vector<string> flavors = {"Cokelat", "Vanila", "Stroberi"};
-    cout << "Pilih rasa: " << endl;
-    for (size_t i = 0; i < flavors.size(); ++i) {
-        cout << i + 1 << ". " << flavors[i] << endl;
-    }
-    int flavorChoice;
-    cout << "Pilihan Anda: ";
-    cin >> flavorChoice;
-    while (cin.fail() || flavorChoice < 1 || flavorChoice > flavors.size()) {
-        cin.clear();
-        cin.ignore(10000, '\n');
-        cout << "Pilihan rasa tidak valid. Silakan pilih kembali: ";
+        string flavor;
+        vector<string> flavors = {"Cokelat", "Vanila", "Stroberi"};
+        cout << "Pilih rasa: " << endl;
+        for (size_t i = 0; i < flavors.size(); ++i) {
+            cout << i + 1 << ". " << flavors[i] << endl;
+        }
+        int flavorChoice;
+        cout << "Pilihan Anda: ";
         cin >> flavorChoice;
-    }
-    flavor = flavors[flavorChoice - 1];
+        while (cin.fail() || flavorChoice < 1 || flavorChoice > flavors.size()) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "Pilihan rasa tidak valid. Silakan pilih kembali: ";
+            cin >> flavorChoice;
+        }
+        flavor = flavors[flavorChoice - 1];
 
-    string size;
-    double basePrice = catalog[choice - 1].price;
-    double totalPrice = basePrice;
-    vector<string> sizes = {"Regular", "Large", "Extra Large"};
-    cout << "Pilih ukuran: " << endl;
-    for (size_t i = 0; i < sizes.size(); ++i) {
-        cout << i + 1 << ". " << sizes[i] << endl;
-    }
-    int sizeChoice;
-    cout << "Pilihan Anda: ";
-    cin >> sizeChoice;
-    while (cin.fail() || sizeChoice < 1 || sizeChoice > sizes.size()) {
-        cin.clear();
-        cin.ignore(10000, '\n');
-        cout << "Pilihan ukuran tidak valid. Silakan pilih kembali: ";
+        clearScreen();
+
+        string size;
+        double basePrice = catalog[choice - 1].price;
+        double totalPrice = basePrice;
+        vector<string> sizes = {"Regular", "Large", "Extra Large"};
+        cout << "Pilih ukuran: " << endl;
+        for (size_t i = 0; i < sizes.size(); ++i) {
+            cout << i + 1 << ". " << sizes[i] << endl;
+        }
+        int sizeChoice;
+        cout << "Pilihan Anda: ";
         cin >> sizeChoice;
+        while (cin.fail() || sizeChoice < 1 || sizeChoice > sizes.size()) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "Pilihan ukuran tidak valid. Silakan pilih kembali: ";
+            cin >> sizeChoice;
+        }
+        size = sizes[sizeChoice - 1];
+
+        if (size == "Large") {
+            totalPrice += 5000;
+        } else if (size == "Extra Large") {
+            totalPrice += 10000;
+        }
+
+        orders.push_back({catalog[choice - 1].name, flavor, size, totalPrice});
+        cout << "Pesanan berhasil diterima!" << endl;
+        cout << "Total Harga: Rp" << fixed << setprecision(0) << totalPrice << endl;
+
+        clearScreen();
+
+        displayReceipt(orders);
+
+        char repeat;
+        cout << "Apakah Anda ingin memesan lagi? (y/n): ";
+        cin >> repeat;
+        if (repeat != 'y' && repeat != 'Y') {
+            clearScreen();
+            break; 
+        }
     }
-    size = sizes[sizeChoice - 1];
-
-    if (size == "Large") {
-        totalPrice += 5000;
-    } else if (size == "Extra Large") {
-        totalPrice += 10000;
-    }
-
-    orders.push_back({catalog[choice - 1].name, flavor, size, totalPrice});
-    cout << "Pesanan berhasil diterima!" << endl;
-    cout << "Total Harga: Rp" << fixed << setprecision(0) << totalPrice << endl;
-
-    displayReceipt(orders);
 }
 
 void displayReceipt(const vector<Order>& orders) {
@@ -189,8 +219,7 @@ void displayReceipt(const vector<Order>& orders) {
     cout << "Apakah Anda ingin memesan lagi? (y/n): ";
     cin >> repeat;
     if (repeat == 'n' || repeat == 'N') {
-        cout << "Terima kasih telah menggunakan layanan Hammer Bakery." << endl;
-        exit(0);
+        clearScreen();
     }
 }
 
@@ -208,6 +237,8 @@ int main() {
     string loggedInUser;
     bool isLoggedIn = false;
     int durationSeconds = 5;
+
+    loadUsersFromFile(users);
     
     while (true) {
         if (!isLoggedIn) {
@@ -226,29 +257,19 @@ int main() {
                     clearScreen();
                     animasiloading(durationSeconds);
                     clearScreen();
-                    while (!isLoggedIn) {
-                isLoggedIn = loginUser(users, loggedInUser);
-                if (isLoggedIn) {
-                    cout << "Login berhasil!" << endl;
-                    sleep(1);
-                    clearScreen();
-                } else {
-                    cout << "Password atau username salah. Silakan coba lagi!" << endl;
-                }
-                }
                     break;
                 case 2:
-                clearScreen();
-                     while (!isLoggedIn) {
-                isLoggedIn = loginUser(users, loggedInUser);
-                if (isLoggedIn) {
-                    cout << "Login berhasil!" << endl;
-                    sleep(1);
                     clearScreen();
-                } else {
-                    cout << "Password atau username salah. Silakan coba lagi!" << endl;
-                }
-                }
+                    while (!isLoggedIn) {
+                        isLoggedIn = loginUser(users, loggedInUser);
+                        if (isLoggedIn) {
+                            cout << "Login berhasil!" << endl;
+                            sleep(1);
+                            clearScreen();
+                        } else {
+                            cout << "Password atau username salah. Silakan coba lagi!" << endl;
+                        }
+                    }
                     break;
                 case 3:
                     cout << "Terima kasih telah mengunjungi Hammer Bakery." << endl;
