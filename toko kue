@@ -232,7 +232,7 @@ void orderCake(const vector<Cake>& catalog, vector<Order>& orders, const string&
     }
 }
 
-void displayReceipt(const vector<Order>& orders) {
+void displayReceipt(const vector<Order>& orders, void (*orderCake)(), void (*displayMainMenu)()) {
     clearScreen();
     cout << "===== Struk Pembelian =====" << endl;
     for (size_t i = 0; i < orders.size(); ++i) {
@@ -245,14 +245,20 @@ void displayReceipt(const vector<Order>& orders) {
     }
 
     char repeat;
-    cout << "Apakah Anda ingin memesan lagi? (y/n): ";
-    cin >> repeat;
-    if (repeat == 'n' || repeat == 'N') {
-        clearScreen();
-        return;
-    } else if (repeat == 'y' || repeat == 'Y') {
-        clearScreen();
-        return;
+    while (true) {
+        cout << "Apakah Anda ingin memeasan lagi? (y/n): ";
+        cin >> repeat;
+        if (repeat == 'n' || repeat == 'N') {
+            clearScreen();
+            displayMainMenu(); 
+            return;
+        } else if (repeat == 'y' || repeat == 'Y') {
+            clearScreen();
+            orderCake();
+            return;
+        } else {
+            cout << "Pilihan tidak valid, mohon coba lagi." << endl;
+        }
     }
 }
 
